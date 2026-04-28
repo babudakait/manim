@@ -189,7 +189,7 @@ class Vector(VGroup):
             self.data[swap_from],
         )
 
-    def swap_and_shift(self, scene, swap_from, swap_to):
+    def shift_and_swap(self, scene, swap_from, swap_to):
         if swap_from == swap_to:
             return
 
