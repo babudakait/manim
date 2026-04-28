@@ -31,6 +31,23 @@ void selection_sort(int *arr, size_t n){
 }
 """
 
+INSERTION_SORT = """
+void insertion_sort(int *arr, size_t n){
+  for (size_t i=1; i<n-1; i++){
+    int key = arr[i];
+    int j = i-1;
+
+    while (j >= 0 && key < arr[j]) j--;
+    j = j+1;
+    
+    if (i != j){
+      memmove(arr+j+1, arr+j, (i-j)*sizeof(int));
+      arr[j] = key;
+    }
+  }
+}
+"""
+
 
 def show_code(scene, code, language="C", scale=0.8, move_to=RIGHT):
     code = Code(code_string=code, language=language).scale(0.9)
@@ -44,7 +61,7 @@ def show_code(scene, code, language="C", scale=0.8, move_to=RIGHT):
 class BubbleSort(Scene):
     def construct(self):
         self.add(Text("Bubble Sort", font_size=30).to_edge(UP))
-        
+
         code = show_code(self, BUBBLE_SORT)
 
         arr = Vector(data=[64, 34, 25, 12, 22, 11, 18]).next_to(
@@ -80,12 +97,10 @@ class BubbleSort(Scene):
         self.wait(3)
 
 
-
-
 class SelectionSort(Scene):
     def construct(self):
         self.add(Text("Selection Sort", font_size=30).to_edge(UP))
-        
+
         code = show_code(self, SELECTION_SORT)
 
         arr = Vector(data=[64, 34, 25, 12, 22, 11, 18]).next_to(
@@ -117,4 +132,42 @@ class SelectionSort(Scene):
 
         self.play(Write(arr.set_focus(n - 1, buff=0)))
         self.wait(3)
-        
+
+
+class InsertionSort(Scene):
+    def construct(self):
+        self.add(Text("Insertion Sort", font_size=30).to_edge(UP))
+
+        code = show_code(self, INSERTION_SORT, scale=0.75)
+
+        arr = Vector(data=[64, 34, 25, 12, 22, 11, 18]).next_to(
+            code, LEFT, buff=0.6, aligned_edge=UP
+        )
+        self.play(Write(arr))
+        self.wait(2)
+
+        ibg = arr.set_focus(1, buff=0, color=RED)
+
+        n = arr.size
+        for i in range(1, n):
+            key = arr.data[i]
+            j = i - 1
+
+            jbg = arr.set_focus(i - 1, buff=0, color=BLUE)
+            self.play(
+                ibg.animate.move_to(arr[i][0].get_center()),
+                FadeIn(arr.set_focus(i - 1, buff=0)),
+            )
+            self.play(FadeIn(jbg), run_time=0.1)
+
+            while j >= 0 and key < arr.data[j]:
+                j -= 1
+
+            if i != j:
+                self.play(jbg.animate.move_to(arr[j + 1][0].get_center()))
+                arr.shift_and_swap(self, i, j + 1)
+
+            self.play(FadeOut(jbg))
+
+        self.play(Write(arr.set_focus(arr.size - 1, buff=0)), FadeOut(ibg))
+        self.wait(3)
