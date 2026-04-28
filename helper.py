@@ -188,3 +188,28 @@ class Vector(VGroup):
             self.data[swap_to],
             self.data[swap_from],
         )
+
+    def swap_and_shift(self, scene, swap_from, swap_to):
+        if swap_from == swap_to:
+            return
+
+        arc = self._get_arc(swap_from, swap_to)
+        step = 1 if swap_from < swap_to else -1
+        cells = range(swap_from, swap_to + step, step)
+        nodes = VGroup(*[self[i][0] for i in cells])
+        labels = VGroup(*[self[i][1] for i in cells])
+
+        shift_by = (LEFT if swap_from < swap_to else RIGHT) * self.cell_width
+        if not self.dir_right:
+            shift_by = (DOWN if swap_from < swap_to else UP) * self.cell_height
+
+        scene.play(MoveAlongPath(labels[0], arc),
+                   labels[1:].animate.shift(shift_by))
+
+        tmp = self.data[swap_from]
+        for i in cells:
+            self.data[i] = self.data[i+step]
+        self.data[swap_to] = tmp
+
+        for idx, val in enumerate(self.data):
+            self[idx].set_node(value=val)
