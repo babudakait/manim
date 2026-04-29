@@ -161,14 +161,13 @@ class Vector(VGroup):
             self[arcfrom][0].get_center(), self[arcto][0].get_center(), angle=-PI
         )
 
-    def set_focus(self, start=0, end=None, color=GREEN, buff=0.1, buffer_factor=1):
+    def set_focus(self, start=0, end=None, color=GREEN, fill=True, buff=0.1, buffer_factor=1):
         end = start + 1 if end is None else end + 1
         node_cells = VGroup(*[node[0] for node in self[start:end]])
-        return (
-            SurroundingRectangle(node_cells, buff=buff)
-            .set_fill(color, opacity=0.3)
-            .set_stroke(color, width=3)
-        )
+        bg = SurroundingRectangle(node_cells, buff=buff).set_stroke(color, width=3)
+        if fill:
+            bg.set_fill(color, opacity=0.3)
+        return bg
 
     def swap(self, scene, swap_from, swap_to):
         if swap_from == swap_to:
