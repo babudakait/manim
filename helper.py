@@ -41,7 +41,7 @@ class Node(VGroup):
         if label:
             self.add(node_label)
 
-    def set_focus(self, color=GREEN, buff=0.1, buffer_factor=1):
+    def set_focus(self, color=GREEN, fill=True, buff=0.1, buffer_factor=1):
         return (
             SurroundingRectangle(self[0], buff=buff)
             .set_fill(color, opacity=0.3)
@@ -53,13 +53,9 @@ class Node(VGroup):
             .set_stroke(color, width=3)
         )
 
-    def set_node(self, scene=None, value=None, label=None, fill=None):
+    def set_node(self, value=None, label=None, fill=None):
         value = self.value if value is None else value
         label = self.label_value if label is None else label
-
-        bg = self.set_focus()
-        if scene:
-            scene.play(Write(bg))
 
         self[1].become(
             Text(str(value), font_size=self.font_size, z_index=1).move_to(
@@ -76,9 +72,6 @@ class Node(VGroup):
 
         if fill:
             self[0].set_fill(fill, opacity=1)
-
-        if scene:
-            scene.play(FadeOut(bg))
 
 
 class Vector(VGroup):
@@ -161,12 +154,23 @@ class Vector(VGroup):
             self[arcfrom][0].get_center(), self[arcto][0].get_center(), angle=-PI
         )
 
-    def set_focus(self, start=0, end=None, color=GREEN, fill=True, buff=0.1, buffer_factor=1):
+    def set_focus(
+        self, start=0, end=None, color=GREEN, fill=True, buff=0.1, buffer_factor=1
+    ):
         end = start + 1 if end is None else end + 1
         node_cells = VGroup(*[node[0] for node in self[start:end]])
-        bg = SurroundingRectangle(node_cells, buff=buff).set_stroke(color, width=3)
+
+        bg = (
+            SurroundingRectangle(node_cells, buff=buff).set_stroke(color, width=3)
+            if self.is_rect
+            else Circle()
+            .surround(self[0], buffer_factor=0.8 * buffer_factor)
+            .set_stroke(color, width=3)
+        )
+
         if fill:
             bg.set_fill(color, opacity=0.3)
+
         return bg
 
     def swap(self, scene, swap_from, swap_to):
@@ -202,12 +206,11 @@ class Vector(VGroup):
         if not self.dir_right:
             shift_by = (DOWN if swap_from < swap_to else UP) * self.cell_height
 
-        scene.play(MoveAlongPath(labels[0], arc),
-                   labels[1:].animate.shift(shift_by))
+        scene.play(MoveAlongPath(labels[0], arc), labels[1:].animate.shift(shift_by))
 
         tmp = self.data[swap_from]
         for i in cells:
-            self.data[i] = self.data[i+step]
+            self.data[i] = self.data[i + step]
         self.data[swap_to] = tmp
 
         for idx, val in enumerate(self.data):
