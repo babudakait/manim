@@ -48,6 +48,32 @@ void insertion_sort(int *arr, size_t n){
 }
 """
 
+LOMUTO_PARTITION = """
+int lomuto_partition(int *arr, int low, int high){
+  int pivot = arr[high];
+  int i = low-1;
+
+  for (int j = low; j <= high-1; j++){
+    if (arr[j] < pivot){
+      i++;
+      swap(&arr[i], &arr[j]);
+    }
+  }
+  swap(&arr[i+1], &arr[high]);
+  return i+1;
+}
+"""
+
+QUICKSORT = """
+void quick_sort(int* arr, int low, int high) {
+  if (low < high) {
+    int pi = partition(arr, low, high);
+    quick_sort(arr, low, pi - 1);
+    quick_sort(arr, pi + 1, high);
+  }
+}
+"""
+
 
 def show_code(scene, code, language="C", scale=0.8, move_to=RIGHT):
     code = Code(code_string=code, language=language).scale(0.9)
@@ -171,3 +197,69 @@ class InsertionSort(Scene):
 
         self.play(Write(arr.set_focus(arr.size - 1, buff=0)), FadeOut(ibg))
         self.wait(3)
+
+
+class QuickSort(Scene):
+    def construct(self):
+        title = Text("QuickSort", font_size=30).to_edge(UP)
+        self.add(title)
+
+        code = show_code(self, LOMUTO_PARTITION, scale=0.75)
+
+        arr = Vector(data=[64, 34, 25, 12, 22, 11, 18]).next_to(
+            code, LEFT, buff=0.6, aligned_edge=UP
+        )
+        self.play(Write(arr))
+        self.wait(2)
+
+        n = arr.size
+        self.lomuto_partition(arr, 0, n - 1)
+        self.wait(3)
+
+        pos = code.get_corner
+        self.play(*[FadeOut(mob) for mob in self.mobjects if mob not in [title, arr]])
+
+        self.play(FadeOut(arr))
+        code2 = show_code(self, QUICKSORT, scale=0.75).shift(UP * 0.4)
+        self.play(FadeIn(arr))
+        self.run(arr, 0, n - 1)
+        self.wait(3)
+
+    def lomuto_partition(self, arr, low, high):
+        pivot = arr.data[high]
+        i = low - 1
+
+        ilbl = (
+            Text("i", font_size=22)
+            .next_to(arr[i + 1][2].get_center(), UP)
+            .shift(LEFT * arr.cell_width)
+        )
+        jlbl = Text("j", font_size=22).next_to(arr[low][0].get_center(), DOWN, buff=0.5)
+
+        pivotbg = arr.set_focus(high, buff=0, color=RED)
+        bg = arr.set_focus(low, high, color=BLUE, fill=False)
+
+        self.play(Write(bg))
+        self.play(Write(ilbl))
+        self.play(Write(pivotbg))
+
+        for j in range(low, high):
+            if j > low:
+                self.play(jlbl.animate.shift(RIGHT * arr.cell_width))
+            if arr.data[j] < pivot:
+                i += 1
+                self.play(ilbl.animate.shift(RIGHT * arr.cell_width))
+                arr.swap(self, i, j)
+
+        arr.swap(self, i + 1, high)
+        self.play(FadeOut(pivotbg), FadeIn(arr.set_focus(i + 1, buff=0, color=GREEN)))
+        self.play(FadeOut(ilbl), FadeOut(jlbl), FadeOut(bg))
+        return i + 1
+
+    def run(self, arr, low, high):
+        if low < high:
+            pi = self.lomuto_partition(arr, low, high)
+            self.run(arr, low, pi - 1)
+            self.run(arr, pi + 1, high)
+        else:
+            self.play(Write(arr.set_focus(low, buff=0)))
